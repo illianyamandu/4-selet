@@ -45,6 +45,7 @@ class UserController extends Controller
 
             return RetornoApi::GetRetornoSucesso('Usuáiro cadastrado com sucesso');
         } catch (Exception $e) {
+            DB::rollBack();
             return RetornoApi::GetRetornoErro($e->getMessage());
         }
     }
@@ -55,7 +56,7 @@ class UserController extends Controller
             $errors = $this->validatorDataUser($request);
             if ($errors)
                 return RetornoApi::GetRetornoErro($errors);
-
+            DB::beginTransaction();
             $data = [
                 'nome' => $request->nome,
                 'telefone' => $request->telefone,
@@ -65,9 +66,11 @@ class UserController extends Controller
 
             $user = User::findOrFail($user_id);
             $user->update($data);
+            DB::commit();
 
             return RetornoApi::GetRetornoSucesso('Dados alterados com sucesso');
         } catch (Exception $e) {
+            DB::rollBack();
             return RetornoApi::GetRetornoErro($e->getMessage());
         }
     }
@@ -75,9 +78,12 @@ class UserController extends Controller
     public function delete($user_id)
     {
         try {
+            DB::beginTransaction();
             User::findOrFail($user_id)->delete();
+            DB::commit();
             return RetornoApi::GetRetornoSucesso('Usuário removido com sucesso');
         } catch (Exception $e) {
+            DB::rollBack();
             return RetornoApi::GetRetornoErro('Ocorreu um erro');
         }
     }
